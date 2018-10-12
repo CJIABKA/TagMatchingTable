@@ -25,14 +25,18 @@ for row in range(sheet.nrows):
 #print len(matchtable)
 
 xlsdir = pathos + '\\WorkPlace\\xls'
-i = 1
+dspldir = pathos + '\\WorkPlace\\Displays'
+if not os.path.exists(dspldir + '\\Result'):
+    os.mkdir('WorkPlace\\Displays\\Result')
+
 for xls in os.listdir(xlsdir):
-    if xls.split('.')[-1] == 'xls' and xls[:4] != 'new_':
+    i = 1
+    if xls.split('.')[-1] == 'xls' and xls[:4] != 'new_' and xls[:4] != 'rem_':
         wb_new = xlwt.Workbook()
         ws_new = wb_new.add_sheet(xls.split('.')[1])
         wb_rem = xlwt.Workbook()
         ws_rem = wb_rem.add_sheet(xls.split('.')[1])
-        print '***********************',xls   
+        print u'***********************',xls
         rb = xlrd.open_workbook(xlsdir + '\\' + xls)
         sheet = rb.sheet_by_index(0)
         ncols = sheet.ncols
@@ -62,6 +66,36 @@ for xls in os.listdir(xlsdir):
 
         wb_new.save(xlsdir + '\\new_' + xls)
         wb_rem.save(xlsdir + '\\rem_' + xls)
-        
+
+for xml in os.listdir(dspldir):
+    if xml.split('.')[-1] == 'xml':
+        print u'***********************', xml
+        fu = open(dspldir + '\\' + xml, 'r')
+        donewfileflag = False
+        Lines = []
+        for line in fu:
+            if '<itemId>' not in line:
+                #if '<value>' in line and '</value>' in line:
+                #    oldvalue = line.strip()[7:-8]
+                #    if ItemNewOld.get(oldvalue):
+                #        line = line.replace(oldvalue, ItemNewOld[oldvalue])
+                #if '<itemName>' in line and '</itemName>' in line:
+                #    oldvalue = line.strip()[10:-11]
+                #    if ItemNewOld.get(oldvalue):
+                #        line = line.replace(oldvalue, ItemNewOld[oldvalue])
+                line = line.decode('utf8')
+                for oldname in old_names:
+                    #print type(oldname), type (line)
+                    #print oldname, line
+                    if oldname in line:
+                        line = line.replace(oldname, matchtable[oldname])
+                        donewfileflag = True
+                Lines.append(line)
+        fu.close()
+        if donewfileflag:
+            fr = open('WorkPlace\\Displays\\Result\\' + xml, 'w')
+            for line in Lines:
+                fr.write(line.encode('utf8'))
+            fr.close()
 
 print u'Обработка закончена'
